@@ -1,4 +1,5 @@
 #include "HttpServer.hpp"
+#include "HttpConnection.hpp"
 #include <fcntl.h>
 #include <stdexcept>
 #include <sys/epoll.h>
@@ -86,6 +87,47 @@ void HttpServer::_setup()
 	}
 }
 
+void HttpServer::_initialConnection()
+{
+	int clientFd = accept(_listenFd, nullptr, nullptr);
+	_setNonBlocking(clientFd);
+
+	struct epoll_event clientEvent;
+	clientEvent.events = EPOLLIN | EPOLLHUP;
+	clientEvent.data.fd = clientFd;
+
+	_connections[clientFd] = new HttpConnection(clientFd);
+	epoll_ctl(_epfd, EPOLL_CTL_ADD, clientFd, &clientEvent);
+}
+
+void HttpServer::_handleInited(int fd)
+{
+	_connections[fd]->handleRequest();
+	if (_connections[fd]->isHandled() || _connections[fd]->isError())
+	{
+		close(fd);
+		epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
+	}
+}
+
+void HttpServer::_handleEpollQue(struct epoll_event *que, int size)
+{
+	for (int i = 0; i < size; ++i)
+	{
+		int fd = que[i].data.fd;
+		std::cout << "Current fd: " << fd << std::endl;
+		if (fd == _listenFd)
+		{
+			_initialConnection();
+		}
+		else	
+		{
+			_handleInited(fd);
+			// std::cout << "Connection: fd: " << fd << " is handled" << std::endl;
+		}
+	}
+}
+
 void HttpServer::run()
 {
 	struct epoll_event events[MAX_EVENTS];
@@ -93,55 +135,14 @@ void HttpServer::run()
 	while (true)
 	{
 		int n = epoll_wait(_epfd, events, MAX_EVENTS, -1);
-
-		for (int i = 0; i < n; ++i)
+		std::cout << "Wake: n: " << n << std::endl;
+		try
 		{
-			int fd = events[i].data.fd;
-			if (fd == _listenFd)
-			{
-				int clientFd = accept(_listenFd, nullptr, nullptr);
-				_setNonBlocking(clientFd);
-
-				struct epoll_event clientEvent;
-				clientEvent.events = EPOLLIN | EPOLLHUP;
-				clientEvent.data.fd = clientFd;
-
-				epoll_ctl(_epfd, EPOLL_CTL_ADD, clientFd, &clientEvent);
-			}
-			else	
-			{
-				std::string requestBytes;
-				while (true)
-				{
-					char buf[4096];
-					ssize_t n = ::recv(fd, buf, sizeof(buf), 0);
-					if (n > 0)
-					{
-						requestBytes.append(buf, buf + n);
-					}
-					else
-					{
-						break; // client closed
-					}
-				}
-				std::cout << "----- RAW REQUEST (" << requestBytes.size() << " bytes) -----\n";
-				std::cout.write(requestBytes.data(), static_cast<std::streamsize>(requestBytes.size()));
-				std::cout << "\n----- END REQUEST -----\n";
-
-				// Send a minimal response so the browser finishes.
-				std::string body = "<!DOCTYPE html><html><head><title>Page Title</title></head><body><h1>This is a Heading</h1><p>This is a paragraph.</p></body></html>";
-				std::string resp =
-					"HTTP/1.1 200 OK\r\n"
-					"Content-Type: text/html; charset=utf-8\r\n"
-					"Content-Length: " + std::to_string(body.size()) + "\r\n"
-					"Connection: close\r\n"
-					"\r\n" + body;
-
-				(void)::send(fd, resp.data(), resp.size(), 0);
-	
-				close(fd);
-				epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
-			}
+			_handleEpollQue(events, n);
+		}
+		catch(std::exception e)
+		{
+			std::cout << "Error: " << e.what() << std::endl;
 		}
 	}	
 }

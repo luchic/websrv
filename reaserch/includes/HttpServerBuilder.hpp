@@ -1,7 +1,7 @@
 #ifndef __HTTPSERVERBUILDER_H
 #define __HTTPSERVERBUILDER_H
 
-#include "../interfaces/IHttpServer.hpp"
+#include "IHttpServer.hpp"
 
 class HttpServerBuilder
 {
