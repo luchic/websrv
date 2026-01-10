@@ -6,9 +6,9 @@ class IHttpApp
 private:
 	/* data */
 public:
-	IHttpApp();
-	IHttpApp(const IHttpApp& other);
-	IHttpApp operator=(const IHttpApp& other);
+	IHttpApp() = default;
+	IHttpApp(const IHttpApp& other) = default;
+	IHttpApp& operator=(const IHttpApp& other) = default;
 	virtual ~IHttpApp() = 0;
 };
 

@@ -1,7 +1,7 @@
 #ifndef __HTTPAPP_H
 #define __HTTPAPP_H
 
-#include "../interfaces/IHttpApp.hpp"
+#include "IHttpApp.hpp"
 
 class HttpApp : IHttpApp
 {
