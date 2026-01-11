@@ -11,6 +11,11 @@
 #include <string>
 #define MAX_EVENTS 64
 
+HttpResponse error()
+{
+	
+}
+
 HttpServer::HttpServer() : IHttpServer()
 {
 	_setup();
@@ -102,9 +107,18 @@ void HttpServer::_initialConnection()
 
 void HttpServer::_handleInited(int fd)
 {
-	_connections[fd]->handleRequest();
-	if (_connections[fd]->isHandled() || _connections[fd]->isError())
+	auto connection = _connections[fd]; 
+	if (connection->readIntoBuffer())
 	{
+		auto request = connection->getRequest();
+		auto response = _app->get()->handle(request);
+		connection->queueResponse(response);
+		close(fd);
+		epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
+	}
+	if (connection->isError())
+	{
+		connection->queueResponse(error());
 		close(fd);
 		epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
 	}
@@ -123,7 +137,6 @@ void HttpServer::_handleEpollQue(struct epoll_event *que, int size)
 		else	
 		{
 			_handleInited(fd);
-			// std::cout << "Connection: fd: " << fd << " is handled" << std::endl;
 		}
 	}
 }

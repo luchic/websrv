@@ -13,14 +13,12 @@
 
 HttpConnection::HttpConnection() :
 	_fd(-1),
-	_state(HttpConnection::NEW),
 	_buffer("")
 {
 }
 
 HttpConnection::HttpConnection(int fd) :
 	_fd(fd),
-	_state(HttpConnection::NEW),
 	_buffer("")
 {
 }
@@ -28,16 +26,15 @@ HttpConnection::HttpConnection(int fd) :
 HttpConnection::~HttpConnection()
 {}
 
-HttpConnection::State HttpConnection::_reciveMessage()
+bool HttpConnection::_reciveMessage()
 {
-	std::string buffer;
 	while (true)
 	{
 		char buf[4096];
 		ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
 		if (n > 0)
 		{
-			buffer.append(buf, buf + n);
+			_buffer.append(buf, buf + n);
 			continue;
 		}
 		else if (n == 0)
@@ -46,55 +43,45 @@ HttpConnection::State HttpConnection::_reciveMessage()
 		}
 		if ((errno == EAGAIN || errno == EWOULDBLOCK))
 		{
-			std::cout << "fd: " << _fd << " got EAGAIN or EWOULDBLOCK" << std::endl;
-			_buffer += buffer;
-			if (_buffer.find("\r\n\r\n") != std::string::npos)
-				return HttpConnection::HANDLED;
-			return HttpConnection::WAITING;
+			_state = HttpConnection::WAITING;
+			return false;
 		}
-		return HttpConnection::ERROR;
+		_state = HttpConnection::ERROR;
+		return false;
 	}
-	_buffer += buffer;
-	if (_buffer.find("\r\n\r\n") != std::string::npos)
-		return HttpConnection::HANDLED;
-	std::cout << "fd: " << _fd << " not full message" << std::endl;
-	return HttpConnection::WAITING;
+	_state = HttpConnection::HANDLED;
+	return true;
 }
 
-void HttpConnection::handleRequest()
+bool HttpConnection::readIntoBuffer()
 {
-	_state = _reciveMessage();
-
-	if (_state == HttpConnection::HANDLED)
+	auto res = _reciveMessage();
+	if (!res)
+		return false;
+	if (_buffer.find("\r\n\r\n") == std::string::npos)
 	{
-		std::string body = "<!DOCTYPE html><html><head><title>Page Title</title></head><body><h1>This is a Heading</h1><p>This is a paragraph.</p></body></html>";
-		std::string resp =
-			"HTTP/1.1 200 OK\r\n"
-			"Content-Type: text/html; charset=utf-8\r\n"
-			"Content-Length: " + std::to_string(body.size()) + "\r\n"
-			"Connection: close\r\n"
-			"\r\n" + body;
-		(void)::send(_fd, resp.data(), resp.size(), 0);
+		_state = HttpConnection::WAITING;
+		return false;
 	}
-	if (_state == HttpConnection::ERROR)
-	{
-		std::string body = "<!DOCTYPE html><html><head><title>error</title></head><body><h1>502 Gateway</h1></body></html>";
-		std::string resp =
-			"HTTP/1.1 502 Bad Gateway\r\n"
-			"Content-Type: text/html; charset=utf-8\r\n"
-			"Content-Length: " + std::to_string(body.size()) + "\r\n"
-			"Connection: close\r\n"
-			"\r\n" + body;
-		(void)::send(_fd, resp.data(), resp.size(), 0);
-	}
+	return true;
 }
 
+bool HttpConnection::isCompleted()
+{
+	return HttpConnection::HANDLED == _state;
+}
 bool HttpConnection::isError()
 {
-	return _state == HttpConnection::ERROR;
+	return HttpConnection::ERROR == _state;
+} 
+
+HttpRequest HttpConnection::getRequest() const
+{
+	return _reader.get()->getRequest(_buffer);
 }
 
-bool HttpConnection::isHandled()
+void HttpConnection::queueResponse(const HttpResponse& response)
 {
-	return _state == HttpConnection::HANDLED;
+	std::string dataResponse = _writer.get()->writeResponse(response);
+
 }
