@@ -2,6 +2,11 @@
 #define __HTTPCONNECTION_H
 
 #include "IHttpConnection.hpp"
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
+#include "IHttpReader.hpp"
+#include "IHttpWriter.hpp"
+#include <memory>
 #include <string>
 
 class HttpConnection : public IHttpConnection
@@ -19,8 +24,10 @@ private:
 	} State;
 
 	State _state;
+	std::unique_ptr<IHttpReader> _reader;
+	std::unique_ptr<IHttpWriter> _writer;
 
-	State _reciveMessage();
+	bool _reciveMessage();
 
 public:
 	HttpConnection();
@@ -30,9 +37,12 @@ public:
 
 	HttpConnection(int fd);
 
-	void handleRequest() override;
-	bool isHandled() override;
+	bool readIntoBuffer() override;
+	bool isCompleted() override;
 	bool isError() override; 
+
+    HttpRequest getRequest() const override;
+    void queueResponse(const HttpResponse& response) override;
 };
 
 #endif
