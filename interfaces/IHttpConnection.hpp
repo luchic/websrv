@@ -10,9 +10,12 @@ public:
 	IHttpConnection& operator=(const IHttpConnection& ather) = default;
 	virtual ~IHttpConnection() = default;
 
-	virtual void handleRequest() = 0;
-	virtual bool isHandled() = 0;
-	virtual bool isError() = 0; 
+	virtual bool readIntoBuffer() =0;
+	virtual bool isCompleted() =0;
+	virtual bool isError() =0; 
+
+    virtual HttpRequest getRequest() const =0;
+    virtual void queueResponse(const HttpResponse& response) =0;
 };
 
 #endif
