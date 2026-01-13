@@ -2,6 +2,9 @@
 #ifndef __IHttpConnection_H
 #define __IHttpConnection_H
 
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
+
 class IHttpConnection
 {
 public:

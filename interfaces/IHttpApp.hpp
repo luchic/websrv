@@ -12,7 +12,7 @@ public:
 	IHttpApp() = default;
 	IHttpApp(const IHttpApp& other) = default;
 	IHttpApp& operator=(const IHttpApp& other) = default;
-	virtual ~IHttpApp() = 0;
+	virtual ~IHttpApp() = default;
 
 	// ?? Do I need use pointers? Maybe shared_ptr unique_ptr weak_ptr??
 	// On a discusion

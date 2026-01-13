@@ -8,10 +8,10 @@ class IHttpWriter
 private:
 	/* data */
 public:
-	IHttpWriter();
-	IHttpWriter(const IHttpWriter& other);
-	IHttpWriter& operator=(const IHttpWriter& other);
-	virtual ~IHttpWriter();
+	IHttpWriter() = default;
+	IHttpWriter(const IHttpWriter& other) = default;
+	IHttpWriter& operator=(const IHttpWriter& other) = default;
+	virtual ~IHttpWriter() = default;
 
 	virtual std::string writeResponse(const HttpResponse& response) = 0;
 };
