@@ -18,7 +18,7 @@ private:
 	// For me it make no sence without threads
 	std::map<int, IHttpConnection*> _connections;
 
-	std::unique_ptr<IHttpApp> *_app;
+	std::unique_ptr<IHttpApp> _app;
 
 	void _setup();
 	void _setNonBlocking(int fd);

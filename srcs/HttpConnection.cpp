@@ -1,4 +1,6 @@
 #include "net/HttpConnection.hpp"
+#include "http/HttpReader.hpp"
+#include "http/HttpWriter.hpp"
 #include <iostream>
 #include <unistd.h>
 #include <fcntl.h>
@@ -13,13 +15,17 @@
 
 HttpConnection::HttpConnection() :
 	_fd(-1),
-	_buffer("")
+	_buffer(""),
+	_reader(std::make_unique<HttpReader>()),
+	_writer(std::make_unique<HttpWriter>())
 {
 }
 
 HttpConnection::HttpConnection(int fd) :
 	_fd(fd),
-	_buffer("")
+	_buffer(""),
+	_reader(std::make_unique<HttpReader>()),
+	_writer(std::make_unique<HttpWriter	>())
 {
 }
 
@@ -37,16 +43,16 @@ bool HttpConnection::_reciveMessage()
 			_buffer.append(buf, buf + n);
 			continue;
 		}
-		else if (n == 0)
+		else if (n == 0 || (errno == EAGAIN || errno == EWOULDBLOCK))
 		{
 			break;
 		}
-		if ((errno == EAGAIN || errno == EWOULDBLOCK))
-		{
-			_state = HttpConnection::WAITING;
-			return false;
-		}
 		_state = HttpConnection::ERROR;
+		return false;
+	}
+	if (_buffer.find("\r\n\r\n") == std::string::npos)
+	{
+		_state = HttpConnection::WAITING;
 		return false;
 	}
 	_state = HttpConnection::HANDLED;
@@ -55,15 +61,7 @@ bool HttpConnection::_reciveMessage()
 
 bool HttpConnection::readIntoBuffer()
 {
-	auto res = _reciveMessage();
-	if (!res)
-		return false;
-	if (_buffer.find("\r\n\r\n") == std::string::npos)
-	{
-		_state = HttpConnection::WAITING;
-		return false;
-	}
-	return true;
+	return _reciveMessage();
 }
 
 bool HttpConnection::isCompleted()
@@ -77,11 +75,11 @@ bool HttpConnection::isError()
 
 HttpRequest HttpConnection::getRequest() const
 {
-	return _reader.get()->getRequest(_buffer);
+	return _reader->getRequest(_buffer);
 }
 
 void HttpConnection::queueResponse(const HttpResponse& response)
 {
-	std::string dataResponse = _writer.get()->writeResponse(response);
-
+	std::string dataResponse = _writer->writeResponse(response);
+	(void)::send(_fd, dataResponse.data(), dataResponse.size(), 0);
 }

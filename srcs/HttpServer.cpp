@@ -1,5 +1,6 @@
 #include "net/HttpServer.hpp"
 #include "net/HttpConnection.hpp"
+#include "app/HttpApp.hpp"
 #include <fcntl.h>
 #include <stdexcept>
 #include <sys/epoll.h>
@@ -13,10 +14,11 @@
 
 HttpResponse error()
 {
-	
+	return HttpResponse {};	
 }
 
-HttpServer::HttpServer() : IHttpServer()
+HttpServer::HttpServer() : IHttpServer(),
+	_app(std::make_unique<HttpApp>())
 {
 	_setup();
 }
@@ -111,7 +113,7 @@ void HttpServer::_handleInited(int fd)
 	if (connection->readIntoBuffer())
 	{
 		auto request = connection->getRequest();
-		auto response = _app->get()->handle(request);
+		auto response = _app->handle(request);
 		connection->queueResponse(response);
 		close(fd);
 		epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
@@ -148,7 +150,6 @@ void HttpServer::run()
 	while (true)
 	{
 		int n = epoll_wait(_epfd, events, MAX_EVENTS, -1);
-		std::cout << "Wake: n: " << n << std::endl;
 		try
 		{
 			_handleEpollQue(events, n);
