@@ -1,5 +1,5 @@
-#include "HttpServer.hpp"
-#include "HttpConnection.hpp"
+#include "net/HttpServer.hpp"
+#include "net/HttpConnection.hpp"
 #include <fcntl.h>
 #include <stdexcept>
 #include <sys/epoll.h>

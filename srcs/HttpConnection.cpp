@@ -1,4 +1,4 @@
-#include "HttpConnection.hpp"
+#include "net/HttpConnection.hpp"
 #include <iostream>
 #include <unistd.h>
 #include <fcntl.h>
