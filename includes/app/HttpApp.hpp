@@ -3,7 +3,7 @@
 
 #include "IHttpApp.hpp"
 
-class HttpApp : IHttpApp
+class HttpApp : public IHttpApp
 {
 private:
 	/* data */
@@ -12,6 +12,8 @@ public:
 	HttpApp(const HttpApp& other);
 	HttpApp& operator=(const HttpApp& other);
 	~HttpApp() override;
+
+	HttpResponse handle(HttpRequest& request) override;
 };
 
 
