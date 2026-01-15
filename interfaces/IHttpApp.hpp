@@ -3,6 +3,8 @@
 
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include "IMiddleware.hpp"
+#include <memory>
 
 class IHttpApp
 {
@@ -17,6 +19,7 @@ public:
 	// ?? Do I need use pointers? Maybe shared_ptr unique_ptr weak_ptr??
 	// On a discusion
 	virtual HttpResponse handle(HttpRequest& request) =0;
+	virtual void use(std::unique_ptr<IMiddleware> middleware) =0;
 };
 
 #endif

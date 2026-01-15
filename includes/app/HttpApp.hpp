@@ -2,11 +2,13 @@
 #define __HTTPAPP_H
 
 #include "IHttpApp.hpp"
+#include <vector>
 
 class HttpApp : public IHttpApp
 {
 private:
-	/* data */
+	std::vector<std::unique_ptr<IMiddleware>> _middlewares;
+
 public:
 	HttpApp();
 	HttpApp(const HttpApp& other);
