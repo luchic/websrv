@@ -1,28 +1,28 @@
-#include "app/BaseStaticMiddleware.hpp"
+#include "app/StaticFilesMiddleware.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <iostream>
 
-BaseStaticMiddleware::BaseStaticMiddleware()
+StaticFilesMiddleware::StaticFilesMiddleware()
 {
 }
 
-BaseStaticMiddleware::BaseStaticMiddleware(const BaseStaticMiddleware& other)
+StaticFilesMiddleware::StaticFilesMiddleware(const StaticFilesMiddleware& other)
 {
 }
 
-BaseStaticMiddleware& BaseStaticMiddleware::operator=(
-	const BaseStaticMiddleware& other)
+StaticFilesMiddleware& StaticFilesMiddleware::operator=(
+	const StaticFilesMiddleware& other)
 {
 	return *this;
 }
 
-BaseStaticMiddleware::~BaseStaticMiddleware()
+StaticFilesMiddleware::~StaticFilesMiddleware()
 {
 }
 
-std::string BaseStaticMiddleware::_getMimeType(const std::string& path)
+std::string StaticFilesMiddleware::_getMimeType(const std::string& path)
 {
 	static const std::map<std::string, std::string> mimeTypes =
 	{
@@ -67,14 +67,14 @@ std::string BaseStaticMiddleware::_getMimeType(const std::string& path)
 	return "application/octet-stream";
 }
 
-std::string BaseStaticMiddleware::_readFile(const std::ifstream& file)
+std::string StaticFilesMiddleware::_readFile(const std::ifstream& file)
 {
     std::ostringstream ss;
     ss << file.rdbuf();
     return ss.str();
 }
 
-bool BaseStaticMiddleware::_handleFile(const HttpRequest& request, HttpResponse& response)
+bool StaticFilesMiddleware::_handleFile(const HttpRequest& request, HttpResponse& response)
 {
 	std::string fileName;
 	std::string path = request.path;
@@ -97,9 +97,13 @@ bool BaseStaticMiddleware::_handleFile(const HttpRequest& request, HttpResponse&
 	return true;
 }
 
-bool BaseStaticMiddleware::handle(
+bool StaticFilesMiddleware::handle(
 	const HttpRequest& request,
 	HttpResponse& response)
 {
-
+	if (_handleFile(request, response))
+	{
+		return true;
+	}
+	return false;
 }
