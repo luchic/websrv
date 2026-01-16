@@ -3,16 +3,26 @@
 
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include <memory>
+
+
+// Chain of Responsibility design pattern
 
 class IMiddleware
 {
+private:
+	IMiddleware(const IMiddleware& ather) = delete;
+	IMiddleware& operator=(const IMiddleware& ather) = delete;
+
 public:
 	IMiddleware() = default;
-	IMiddleware(const IMiddleware& ather) = default;
-	IMiddleware& operator=(const IMiddleware& ather) = default;
-	virtual ~IMiddleware();
+	virtual ~IMiddleware() = default;
 
-	virtual bool handle(const HttpRequest& request, HttpResponse& response) =0;
+	IMiddleware(IMiddleware&& ather) = default;
+    IMiddleware& operator=(IMiddleware&& ather) = default;
+
+	virtual void setNext(std::unique_ptr<IMiddleware> next) =0;
+	virtual bool handle(const HttpRequest& request, HttpResponse& response) =0; 
 };
 
 #endif
