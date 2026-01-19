@@ -31,16 +31,20 @@ server.run();
 ### Simple structer
 
 - Net layer (no HTTP knowledge): accept sockets, epoll loop, per-connection read/write buffering
-	- Server (listen/epoll)
-	- Connection (fd, inBuffer, outBuffer, state)
+	- HttpServer (listen/epoll)
+	- Connection (fd, inBuffer, outBuffer, state, i need keep connection till i will get \r\n\r\n sequence at the end of HTML)
 - HTTP layer (pure parsing/formatting):
 	- HttpRequest (method, target/path, headers, body)
 	- HttpResponse (status, headers, body)
 	- HttpParser (incremental: parse when \r\n\r\n is present; later add body support)
 	- ResponseWriter (serialize headers + body bytes)
 - App layer (your “framework”):
+	- HttpApp: class for framework
 	- Middleware: bool handle(const HttpRequest&, HttpResponse& out) (returns handled or not)
 	- RouterMiddleware: exact match method+path -> handler
 	- StaticFilesMiddleware(docRoot): serves /favicon.ico, /static/..., /app.js, etc
 	- NotFoundMiddleware
 
+#### SMall about middleware
+I want to try to implement this design pattern
+![alt text](image.png)
