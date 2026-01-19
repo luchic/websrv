@@ -1,9 +1,9 @@
 #ifndef __BASESTATICKMIDDLEWARE_HPP
 #define __BASESTATICKMIDDLEWARE_HPP
 
-#include "IMiddleware.hpp"
+#include "app/BaseMiddleware.hpp"
 
-class StaticFilesMiddleware : public IMiddleware 
+class StaticFilesMiddleware : public BaseMiddleware 
 {
 private:
 std::string _getMimeType(const std::string& path);

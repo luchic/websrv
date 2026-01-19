@@ -23,10 +23,13 @@ bool NotFoundMiddleware::handle(
 	const HttpRequest& request,
 	HttpResponse& response)
 {
-	response.status = 404;
-	response.statusText = "Not Found";
-	response.headers["Content-Type"] = "text/html; charset=utf-8";
-	response.body = "<html><body><h1>404 Not Found</h1></body></html>";
+	HttpResponse notFound;
+	notFound.status = 404;
+	notFound.statusText = "Not Found";
+	notFound.headers["Content-Type"] = "text/html; charset=utf-8";
+	notFound.body = "<html><body><h1>404 Not Found</h1></body></html>";
+
+	response = notFound;
 	return true;
 }
 

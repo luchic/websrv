@@ -20,11 +20,7 @@ public:
 	BaseMiddleware& BaseMiddleware::operator=(const BaseMiddleware&& ather);
 
 
-	void setNext(std::unique_ptr<IMiddleware> next) override
-	{
-		_next = std::move(next);
-	}
-
+	void setNext(std::unique_ptr<IMiddleware> next) override;
 	virtual bool handle(
 		const HttpRequest& request, HttpResponse& response) override =0;
 };

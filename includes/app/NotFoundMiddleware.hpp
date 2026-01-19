@@ -2,8 +2,9 @@
 #define __NOTFOUNDMIDDLEWARE_HPP
 
 #include "IMiddleware.hpp"
+#include "app/BaseMiddleware.hpp"
 
-class NotFoundMiddleware : public IMiddleware
+class NotFoundMiddleware : public BaseMiddleware
 {
 public:
 	NotFoundMiddleware();
